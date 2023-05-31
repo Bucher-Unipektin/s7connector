@@ -15,49 +15,48 @@ limitations under the License.
 */
 package com.github.s7connector.test.converter;
 
+import com.github.s7connector.impl.serializer.converter.LongConverter;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.github.s7connector.impl.serializer.converter.LongConverter;
 
 public class LongConverterTest {
 
 	@Test
-	public void insert1() {		
+	public void insert1() {
 		LongConverter c = new LongConverter();
 		byte[] buffer = new byte[4];
 		c.insert(530L, buffer, 0, 0, 0);
-		Assert.assertEquals( 0x00, (int)buffer[0]);
-		Assert.assertEquals( 0x00, (int)buffer[1]);
-		Assert.assertEquals( 0x02, (int)buffer[2]);
-		Assert.assertEquals( 0x12, (int)buffer[3]);
+		Assert.assertEquals(0x00, (int) buffer[0]);
+		Assert.assertEquals(0x00, (int) buffer[1]);
+		Assert.assertEquals(0x02, (int) buffer[2]);
+		Assert.assertEquals(0x12, (int) buffer[3]);
 	}
 
-	
+
 	@Test
 	public void extract1() {
 		LongConverter c = new LongConverter();
-		byte[] buffer = new byte[]{ 0x00, 0x00, 0x02, 0x12 };
-		long l = (Long)c.extract(Long.class, buffer, 0, 0);
-		Assert.assertEquals( 530L, l );
+		byte[] buffer = new byte[]{0x00, 0x00, 0x02, 0x12};
+		long l = c.extract(Long.class, buffer, 0, 0);
+		Assert.assertEquals(530L, l);
 	}
-	
+
 	@Test
-	public void roundTrip(){
+	public void roundTrip() {
 		LongConverter c = new LongConverter();
 		byte[] buffer = new byte[4];
-		
+
 		Long[] longs = new Long[]{
 				0L, 1L, -1L,
-				(long)Math.pow(2, 16),
-				(long)Math.pow(2, 16)*-1
+				(long) Math.pow(2, 16),
+				(long) Math.pow(2, 16) * -1
 		};
-		
-		for (long l: longs){
+
+		for (long l : longs) {
 			c.insert(l, buffer, 0, 0, 0);
 			long extract = c.extract(Long.class, buffer, 0, 0);
 			Assert.assertEquals(l, extract);
 		}
-		
+
 	}
 }

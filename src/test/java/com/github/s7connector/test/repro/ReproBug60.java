@@ -15,12 +15,12 @@ limitations under the License.
 */
 package com.github.s7connector.test.repro;
 
-import com.github.s7connector.api.DaveArea;
+import com.github.s7connector.api.PlcArea;
 import com.github.s7connector.api.S7Serializer;
+import com.github.s7connector.api.S7Type;
 import com.github.s7connector.api.annotation.Datablock;
 import com.github.s7connector.api.annotation.S7Variable;
 import com.github.s7connector.api.factory.S7SerializerFactory;
-import com.github.s7connector.api.S7Type;
 import com.github.s7connector.test.connector.EchoConnector;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,14 +34,14 @@ public class ReproBug60 {
 
 	private static final Random RNG = new Random();
 
-	
+
 	@Test
 	public void test() {
 		EchoConnector c = new EchoConnector();
 
 		//Prepare data
 		byte[] in = new byte[10];
-		c.write(DaveArea.DB, 4, 0, in);
+		c.write(PlcArea.DB, 4, 0, in);
 
 		S7Serializer p = S7SerializerFactory.buildSerializer(c);
 
@@ -51,15 +51,14 @@ public class ReproBug60 {
 		Assert.assertNotNull(out);
 		Assert.assertNotNull(out.byteArray);
 	}
-	
+
 	@Datablock
 	public static class MyDB {
-		@S7Variable(byteOffset=0, bitOffset=0, type=S7Type.BYTE, arraySize=10)
+		@S7Variable(byteOffset = 0, bitOffset = 0, type = S7Type.BYTE, arraySize = 10)
 		public Byte[] byteArray;
 
 
 	}
-	
 
 
 }

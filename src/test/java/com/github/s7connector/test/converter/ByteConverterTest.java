@@ -16,50 +16,44 @@ limitations under the License.
 package com.github.s7connector.test.converter;
 
 
+import com.github.s7connector.impl.serializer.converter.ByteConverter;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.github.s7connector.impl.serializer.converter.ByteConverter;
+public class ByteConverterTest {
 
-public class ByteConverterTest
-{
-	
 	@Test
-	public void insert1()
-	{
+	public void insert1() {
 		ByteConverter c = new ByteConverter();
 		byte[] buffer = new byte[2];
-		c.insert((byte)55, buffer, 0, 0, 1);
-		Assert.assertEquals( 55, (int)buffer[0]);
-		Assert.assertEquals( 0x00, buffer[1]);
+		c.insert((byte) 55, buffer, 0, 0, 1);
+		Assert.assertEquals(55, (int) buffer[0]);
+		Assert.assertEquals(0x00, buffer[1]);
 	}
 
 	@Test
-	public void insert2()
-	{
+	public void insert2() {
 		ByteConverter c = new ByteConverter();
 		byte[] buffer = new byte[2];
-		c.insert((byte)55, buffer, 1, 0, 1);
-		Assert.assertEquals( 0x00, buffer[0]);
-		Assert.assertEquals( 55, (int)buffer[1]);
-	}
-	
-	@Test
-	public void extract1()
-	{
-		ByteConverter c = new ByteConverter();
-		byte[] buffer = new byte[]{ 0x55, 0x00 };
-		byte b = (Byte)c.extract(Byte.class, buffer, 0, 0);
-		Assert.assertEquals( 0x55, (byte)b);
+		c.insert((byte) 55, buffer, 1, 0, 1);
+		Assert.assertEquals(0x00, buffer[0]);
+		Assert.assertEquals(55, (int) buffer[1]);
 	}
 
 	@Test
-	public void extract2()
-	{
+	public void extract1() {
 		ByteConverter c = new ByteConverter();
-		byte[] buffer = new byte[]{ 0x55, 0x44 };
-		Byte b = (Byte)c.extract(Byte.class, buffer, 1, 0);
-		Assert.assertEquals( 0x44, (byte)b);
+		byte[] buffer = new byte[]{0x55, 0x00};
+		byte b = c.extract(Byte.class, buffer, 0, 0);
+		Assert.assertEquals(0x55, b);
+	}
+
+	@Test
+	public void extract2() {
+		ByteConverter c = new ByteConverter();
+		byte[] buffer = new byte[]{0x55, 0x44};
+		Byte b = c.extract(Byte.class, buffer, 1, 0);
+		Assert.assertEquals(0x44, (byte) b);
 	}
 
 }

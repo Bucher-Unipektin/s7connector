@@ -15,31 +15,29 @@ limitations under the License.
 */
 package com.github.s7connector.test.live;
 
-import java.util.Date;
-
 import com.github.s7connector.api.S7Connector;
 import com.github.s7connector.api.S7Serializer;
+import com.github.s7connector.api.S7Type;
 import com.github.s7connector.api.annotation.S7Variable;
 import com.github.s7connector.api.factory.S7ConnectorFactory;
 import com.github.s7connector.api.factory.S7SerializerFactory;
-import com.github.s7connector.api.S7Type;
 
-public class RealPLCTest
-{
+import java.util.Date;
+
+public class RealPLCTest {
 
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) throws Exception
-	{
-		
+	public static void main(String[] args) throws Exception {
+
 		/*
 		 * Byte:
 		 * Tested: 2012-01-20 OK
 		 * 0x05 = 0x05
 		 * 0xA5 = 0xA5
 		 */
-		
+
 		/*
 		 * Word:
 		 * Tested: 2012-01-20 OK
@@ -48,7 +46,7 @@ public class RealPLCTest
 		 * 0xAA55 = 0xAA, 0x55
 		 * W#16#5A5A = 0x5a, 0x5a
 		 */
-		
+
 		/*
 		 * Double:
 		 * Tested: 2012-01-21 OK -> float!
@@ -66,7 +64,7 @@ public class RealPLCTest
 		 * 100.0 = 42,c8,0,0
 		 * 1000.0 = 44,7a,0,0
 		 */
-		
+
 		/*
 		 * S5Time:
 		 * S5T#0ms = 0x00, 0x00
@@ -84,7 +82,7 @@ public class RealPLCTest
 		 * S5T#1m500ms = 0x16, 0x05
 		 * S5T#1h = 0x33, 0x60
 		 */
-		
+
 		/*
 		 * Integer:
 		 * Tested: 2012-01-20 OK
@@ -98,64 +96,63 @@ public class RealPLCTest
 		 * 32000 = 7d,0
 		 * -32000 = 83,0
 		 */
-		
-		S7Connector c = 
+
+		S7Connector c =
 				S7ConnectorFactory
-				.buildTCPConnector()
-				.withHost("10.0.0.220")
-				.build();
-		
+						.buildTCPConnector()
+						.withHost("10.0.0.220")
+						.build();
+
 		S7Serializer s = S7SerializerFactory.buildSerializer(c);
-		
+
 		DB db = new DB();
 		db.str = "Hello!";
 		db.d = Math.PI;
 		db.b1 = true;
 		db.b3 = true;
 		db.by1 = 0x5A;
-		
+
 		Date d = new Date();
 		System.out.println(d);
 		System.out.println(d.getTime());
-		
+
 		db.date1 = d;
 		db.date2 = d;
 		db.millis = 3600000;
-		
+
 		s.store(db, 100, 0);
 
 		System.out.println("OK");
-		
+
 		c.close();
 	}
-	
-	public static class DB
-	{
-		@S7Variable(type=S7Type.REAL, byteOffset=0)
+
+	public static class DB {
+		@S7Variable(type = S7Type.REAL, byteOffset = 0)
 		public double d;
-		
-		@S7Variable(type=S7Type.STRING, byteOffset=4, size=20)
+
+		@S7Variable(type = S7Type.STRING, byteOffset = 4, size = 20)
 		public String str;
-		
-		@S7Variable(type=S7Type.BOOL, byteOffset=30, bitOffset=0)
+
+		@S7Variable(type = S7Type.BOOL, byteOffset = 30, bitOffset = 0)
 		public boolean b1;
 
-		@S7Variable(type=S7Type.BOOL, byteOffset=30, bitOffset=1)
+		@S7Variable(type = S7Type.BOOL, byteOffset = 30, bitOffset = 1)
 		public boolean b2;
 
-		@S7Variable(type=S7Type.BOOL, byteOffset=30, bitOffset=2)
+		@S7Variable(type = S7Type.BOOL, byteOffset = 30, bitOffset = 2)
 		public boolean b3;
 
-		@S7Variable(type=S7Type.BYTE, byteOffset=31)
+		@S7Variable(type = S7Type.BYTE, byteOffset = 31)
 		public byte by1;
-		
-		@S7Variable(type=S7Type.DATE_AND_TIME, byteOffset=32)
+
+		@S7Variable(type = S7Type.DATE_AND_TIME, byteOffset = 32)
 		public Date date1;
-		
-		@S7Variable(type=S7Type.TIME, byteOffset=40)
+
+		@S7Variable(type = S7Type.TIME, byteOffset = 40)
 		public long millis;
-		
-		@S7Variable(type=S7Type.DATE, byteOffset=44)
+
+		@S7Variable(type = S7Type.DATE, byteOffset = 44)
 		public Date date2;
 	}
 

@@ -16,10 +16,10 @@ limitations under the License.
 package com.github.s7connector.test;
 
 import com.github.s7connector.api.S7Serializer;
+import com.github.s7connector.api.S7Type;
 import com.github.s7connector.api.annotation.Datablock;
 import com.github.s7connector.api.annotation.S7Variable;
 import com.github.s7connector.api.factory.S7SerializerFactory;
-import com.github.s7connector.api.S7Type;
 import com.github.s7connector.test.connector.EchoConnector;
 import org.junit.Assert;
 import org.junit.Test;
@@ -30,27 +30,27 @@ public class DWORDSerializerTest {
 	@Test
 	public void test() {
 		EchoConnector c = new EchoConnector();
-		
+
 		S7Serializer p = S7SerializerFactory.buildSerializer(c);
 
 		/*
 		 * first level
 		 */
-		
+
 		MyDB in = new MyDB();
 		in.l = 123L;
 
 		p.store(in, 0, 0);
-		
+
 		MyDB out = p.dispense(MyDB.class, 0, 0);
-		
+
 		Assert.assertEquals(in.l, out.l);
 
 	}
-	
+
 	@Datablock
 	public static class MyDB {
-		@S7Variable(type=S7Type.DWORD, byteOffset=0)
+		@S7Variable(type = S7Type.DWORD, byteOffset = 0)
 		public long l;
 	}
 }

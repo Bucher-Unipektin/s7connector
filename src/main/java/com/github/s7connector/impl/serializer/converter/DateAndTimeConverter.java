@@ -15,10 +15,10 @@ limitations under the License.
 */
 package com.github.s7connector.impl.serializer.converter;
 
+import com.github.s7connector.api.S7Type;
+
 import java.util.Calendar;
 import java.util.Date;
-
-import com.github.s7connector.api.S7Type;
 
 public final class DateAndTimeConverter extends ByteConverter {
 
@@ -35,7 +35,9 @@ public final class DateAndTimeConverter extends ByteConverter {
 	// 12, 1,10,10, 5,50,0,3, (hex)
 	// 12-01-10 10:05:50.000
 
-	/** {@inheritDoc} */
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public <T> T extract(final Class<T> targetClass, final byte[] buffer, final int byteOffset, final int bitOffset) {
 		final Calendar c = Calendar.getInstance();
@@ -98,28 +100,36 @@ public final class DateAndTimeConverter extends ByteConverter {
 		}
 	}
 
-	/** {@inheritDoc} */
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public S7Type getS7Type() {
 		return S7Type.DATE_AND_TIME;
 	}
 
-	/** {@inheritDoc} */
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public int getSizeInBits() {
 		return 0;
 	}
 
-	/** {@inheritDoc} */
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public int getSizeInBytes() {
 		return 8;
 	}
 
-	/** {@inheritDoc} */
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void insert(final Object javaType, final byte[] buffer, final int byteOffset, final int bitOffset,
-			final int size) {
+					   final int size) {
 		final Date date = (Date) javaType;
 		final Calendar c = Calendar.getInstance();
 		c.setTime(date);
@@ -176,10 +186,9 @@ public final class DateAndTimeConverter extends ByteConverter {
 	 */
 	public void putToPLC(final byte[] buffer, final int offset, final int i) {
 		try {
-			final int ret = Integer.parseInt("" + i, 16);
+			final int ret = Integer.parseInt(String.valueOf(i), 16);
 			buffer[offset] = (byte) ret;
 		} catch (final NumberFormatException e) {
-			return;
 		}
 	}
 

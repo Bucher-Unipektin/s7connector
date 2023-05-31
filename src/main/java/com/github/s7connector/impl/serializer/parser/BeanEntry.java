@@ -15,14 +15,14 @@ limitations under the License.
 */
 package com.github.s7connector.impl.serializer.parser;
 
-import java.lang.reflect.Field;
-
 import com.github.s7connector.api.S7Serializable;
 import com.github.s7connector.api.S7Type;
 
+import java.lang.reflect.Field;
+
 /**
  * A Bean-Entry
- * 
+ *
  * @author Thomas Rudin
  */
 public final class BeanEntry {

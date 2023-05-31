@@ -15,7 +15,7 @@ limitations under the License.
 */
 package com.github.s7connector.test;
 
-import com.github.s7connector.api.DaveArea;
+import com.github.s7connector.api.PlcArea;
 import com.github.s7connector.api.S7Connector;
 import com.github.s7connector.api.factory.S7ConnectorFactory;
 import org.junit.Test;
@@ -30,7 +30,7 @@ public class ConnectionDropTest {
 	@Test
 	public void test() throws Exception {
 
-		final int port = (int)(Math.random() * 10000) + 10000;
+		final int port = (int) (Math.random() * 10000) + 10000;
 		final ServerSocket serverSocket = new ServerSocket(port);
 		new Thread(() -> {
 			try {
@@ -48,8 +48,8 @@ public class ConnectionDropTest {
 		serverSocket.close();
 
 		try {
-			connector.read(DaveArea.DB, 1, 1, 0);
-		} catch(IllegalArgumentException e){
+			connector.read(PlcArea.DB, 1, 1, 0);
+		} catch (IOException e) {
 			return;
 		}
 

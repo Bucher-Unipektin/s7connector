@@ -19,38 +19,38 @@ package com.github.s7connector.impl.utils;
  * S7-Utility class
  *
  * @author Thomas Rudin Libnodave: http://libnodave.sourceforge.net/
- *
  */
 public final class S7Utils {
-	/**
-	 * Converts a byte to 8 bits
-	 *
-	 * @param buffer
-	 *            The Input-Byte
-	 * @return The 8 bits
-	 */
-	public static boolean[] getBits(int buffer) {
-		if (buffer < 0) {
-			buffer += 256;
-		}
+    /**
+     * Constructor
+     */
+    private S7Utils() {
+        // Not needed. Utility class.
+    }
 
-		final String binString = Integer.toBinaryString(buffer);
-		/*
-		 * String-Pos: 0 1 2 3 4 5 6 7 Bit: 128 64 32 16 8 4 2 1
-		 */
-		final boolean[] ret = new boolean[8];
-		for (int i = binString.length() - 1; i >= 0; i--) {
-			// Check for the '1'-Char and mirror-set the result
-			final int mirrorPos = (binString.length() - 1) - i;
-			if (binString.charAt(i) == '1') {
-				ret[mirrorPos] = true;
-			}
-		}
-		return ret;
-	}
+    /**
+     * Converts a byte to 8 bits
+     *
+     * @param buffer The Input-Byte
+     * @return The 8 bits
+     */
+    public static boolean[] getBits(int buffer) {
+        if (buffer < 0) {
+            buffer += 256;
+        }
 
-	/** Constructor */
-	private S7Utils() {
-		// Not needed. Utility class.
-	}
+        final String binString = Integer.toBinaryString(buffer);
+        /*
+         * String-Pos: 0 1 2 3 4 5 6 7 Bit: 128 64 32 16 8 4 2 1
+         */
+        final boolean[] ret = new boolean[8];
+        for (int i = binString.length() - 1; i >= 0; i--) {
+            // Check for the '1'-Char and mirror-set the result
+            final int mirrorPos = (binString.length() - 1) - i;
+            if (binString.charAt(i) == '1') {
+                ret[mirrorPos] = true;
+            }
+        }
+        return ret;
+    }
 }

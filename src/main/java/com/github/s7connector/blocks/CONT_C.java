@@ -15,14 +15,13 @@ limitations under the License.
 */
 package com.github.s7connector.blocks;
 
-import com.github.s7connector.api.annotation.S7Variable;
 import com.github.s7connector.api.S7Type;
+import com.github.s7connector.api.annotation.S7Variable;
 
 /**
  * PID Control block representation
  *
  * @author Thomas Rudin (thomas@rudin-informatik.ch)
- *
  */
 public class CONT_C {
 

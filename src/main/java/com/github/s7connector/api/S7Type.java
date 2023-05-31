@@ -15,22 +15,11 @@ limitations under the License.
 */
 package com.github.s7connector.api;
 
-import com.github.s7connector.api.S7Serializable;
-import com.github.s7connector.impl.serializer.converter.BitConverter;
-import com.github.s7connector.impl.serializer.converter.ByteConverter;
-import com.github.s7connector.impl.serializer.converter.DateAndTimeConverter;
-import com.github.s7connector.impl.serializer.converter.DateConverter;
-import com.github.s7connector.impl.serializer.converter.IntegerConverter;
-import com.github.s7connector.impl.serializer.converter.LongConverter;
-import com.github.s7connector.impl.serializer.converter.ShortConverter;
-import com.github.s7connector.impl.serializer.converter.RealConverter;
-import com.github.s7connector.impl.serializer.converter.StringConverter;
-import com.github.s7connector.impl.serializer.converter.StructConverter;
-import com.github.s7connector.impl.serializer.converter.TimeConverter;
+import com.github.s7connector.impl.serializer.converter.*;
 
 /**
  * Type of the Address
- * 
+ *
  * @author Thomas Rudin Libnodave: http://libnodave.sourceforge.net/
  */
 public enum S7Type {
@@ -94,13 +83,14 @@ public enum S7Type {
 	 */
 	INT(ShortConverter.class, 2, 0);
 
-	private int byteSize, bitSize;
+	private final int byteSize;
+	private final int bitSize;
 
-	private Class<? extends S7Serializable> serializer;
+	private final Class<? extends S7Serializable> serializer;
 
 	/**
 	 * Enum Constructor
-	 * 
+	 *
 	 * @param serializer
 	 * @param byteSize
 	 * @param bitSize

@@ -15,37 +15,34 @@ limitations under the License.
 */
 package com.github.s7connector.test.connector;
 
-import java.io.IOException;
-
-import com.github.s7connector.api.DaveArea;
+import com.github.s7connector.api.PlcArea;
 import com.github.s7connector.api.S7Connector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 /**
  * Echo connector for testing
- * 
+ * <p>
  * returns the same buffer in read() as given in write() regardless of the byte-range or area
- * 
- * @author Thomas Rudin
  *
+ * @author Thomas Rudin
  */
 public class EchoConnector implements S7Connector {
 
 	private static final Logger logger = LoggerFactory.getLogger(EchoConnector.class);
+	public byte[] buffer;
 
 	@Override
-	public byte[] read(DaveArea area, int areaNumber, int bytes, int offset) {
+	public byte[] read(PlcArea area, int areaNumber, int bytes, int offset) {
 		logger.debug("Reading area={} areaNumber={}, bytes={} offset={}",
 				area, areaNumber, bytes, offset);
 		return buffer;
 	}
 
-	public byte[] buffer;
-
-
 	@Override
-	public void write(DaveArea area, int areaNumber, int offset, byte[] buffer) {
+	public void write(PlcArea area, int areaNumber, int offset, byte[] buffer) {
 		logger.debug("Writing area={} areaNumber={}, offset={} buffer.length={}",
 				area, areaNumber, offset, buffer.length);
 
@@ -60,6 +57,7 @@ public class EchoConnector implements S7Connector {
 
 
 	@Override
-	public void close() throws IOException {}
+	public void close() throws IOException {
+	}
 
 }

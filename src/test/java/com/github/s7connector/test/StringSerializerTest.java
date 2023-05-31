@@ -16,17 +16,13 @@ limitations under the License.
 package com.github.s7connector.test;
 
 import com.github.s7connector.api.S7Serializer;
+import com.github.s7connector.api.S7Type;
 import com.github.s7connector.api.annotation.Datablock;
 import com.github.s7connector.api.annotation.S7Variable;
 import com.github.s7connector.api.factory.S7SerializerFactory;
-import com.github.s7connector.api.S7Type;
 import com.github.s7connector.test.connector.EchoConnector;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Random;
 
 public class StringSerializerTest {
 
@@ -34,27 +30,27 @@ public class StringSerializerTest {
 	@Test
 	public void test() {
 		EchoConnector c = new EchoConnector();
-		
+
 		S7Serializer p = S7SerializerFactory.buildSerializer(c);
 
 		/*
 		 * first level
 		 */
-		
+
 		MyDB in = new MyDB();
 		in.str = "Hello World";
 
 		p.store(in, 0, 0);
-		
+
 		MyDB out = p.dispense(MyDB.class, 0, 0);
-		
+
 		Assert.assertEquals(in.str, out.str);
 
 	}
-	
+
 	@Datablock
 	public static class MyDB {
-		@S7Variable(type=S7Type.STRING, byteOffset=0, size=20)
+		@S7Variable(type = S7Type.STRING, byteOffset = 0, size = 20)
 		public String str;
 	}
 }

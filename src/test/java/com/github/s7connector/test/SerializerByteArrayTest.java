@@ -15,24 +15,22 @@ limitations under the License.
 */
 package com.github.s7connector.test;
 
-import java.util.Random;
-
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import com.github.s7connector.api.S7Serializer;
+import com.github.s7connector.api.S7Type;
 import com.github.s7connector.api.annotation.Datablock;
 import com.github.s7connector.api.annotation.S7Variable;
 import com.github.s7connector.api.factory.S7SerializerFactory;
-import com.github.s7connector.api.S7Type;
 import com.github.s7connector.test.connector.EchoConnector;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.Random;
 
 public class SerializerByteArrayTest {
 
 	private static final Random RNG = new Random();
 
-	
+
 	@Test
 	//@Ignore //Note: Dispenser does not work currently with plain byte[], use Byte[] instead
 	public void test() {
@@ -42,51 +40,49 @@ public class SerializerByteArrayTest {
 		/*
 		 * first level
 		 */
-		
+
 		MyDB in = new MyDB();
 
-		for (int i=0; i<in.byteArray.length; i++)
-			in.byteArray[i] = (byte)RNG.nextInt(256);
-		
-		in.byteArray2 = new byte[10];
-		for (int i=0; i<in.byteArray2.length; i++)
-			in.byteArray2[i] = (byte)RNG.nextInt(256);
-		
+		for (int i = 0; i < in.byteArray.length; i++)
+			in.byteArray[i] = (byte) RNG.nextInt(256);
 
-		
+		in.byteArray2 = new byte[10];
+		for (int i = 0; i < in.byteArray2.length; i++)
+			in.byteArray2[i] = (byte) RNG.nextInt(256);
+
+
+
 		/*
 		 * EOL
 		 */
-		
+
 		p.store(in, 0, 0);
-		
+
 		MyDB out = p.dispense(MyDB.class, 0, 0);
-		
-		for (int i=0; i<in.byteArray.length; i++)
-			Assert.assertEquals( in.byteArray[i], out.byteArray[i] );
-		
-		for (int i=0; i<in.byteArray2.length; i++)
-			Assert.assertEquals( in.byteArray2[i], out.byteArray2[i] );
+
+		for (int i = 0; i < in.byteArray.length; i++)
+			Assert.assertEquals(in.byteArray[i], out.byteArray[i]);
+
+		for (int i = 0; i < in.byteArray2.length; i++)
+			Assert.assertEquals(in.byteArray2[i], out.byteArray2[i]);
 	}
-	
+
 	@Datablock
-	public static class MyDB
-	{
+	public static class MyDB {
 
 		/**
 		 * Initialized array
 		 */
-		@S7Variable(type=S7Type.BYTE, byteOffset=0, arraySize=10)
+		@S7Variable(type = S7Type.BYTE, byteOffset = 0, arraySize = 10)
 		public byte[] byteArray = new byte[10];
-		
+
 		/**
 		 * not initialized array
 		 */
-		@S7Variable(type=S7Type.BYTE, byteOffset=10, arraySize=10)
+		@S7Variable(type = S7Type.BYTE, byteOffset = 10, arraySize = 10)
 		public byte[] byteArray2;
 
 	}
-	
 
 
 }

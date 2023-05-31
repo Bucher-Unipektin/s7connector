@@ -15,10 +15,10 @@ limitations under the License.
 */
 package com.github.s7connector.impl.serializer.converter;
 
+import com.github.s7connector.api.S7Type;
+
 import java.util.Calendar;
 import java.util.Date;
-
-import com.github.s7connector.api.S7Type;
 
 public final class DateConverter extends IntegerConverter {
 
@@ -38,7 +38,9 @@ public final class DateConverter extends IntegerConverter {
 		OFFSET_1990 = c.getTime().getTime();
 	}
 
-	/** {@inheritDoc} */
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public <T> T extract(final Class<T> targetClass, final byte[] buffer, final int byteOffset, final int bitOffset) {
 		final long days = super.extract(Integer.class, buffer, byteOffset, bitOffset);
@@ -57,16 +59,20 @@ public final class DateConverter extends IntegerConverter {
 		return targetClass.cast(c.getTime());
 	}
 
-	/** {@inheritDoc} */
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public S7Type getS7Type() {
 		return S7Type.DATE;
 	}
 
-	/** {@inheritDoc} */
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void insert(final Object javaType, final byte[] buffer, final int byteOffset, final int bitOffset,
-			final int size) {
+					   final int size) {
 		final Date d = (Date) javaType;
 
 		long millis = d.getTime();

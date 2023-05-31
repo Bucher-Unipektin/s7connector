@@ -15,63 +15,57 @@ limitations under the License.
 */
 package com.github.s7connector.test.converter;
 
+import com.github.s7connector.impl.serializer.converter.ShortConverter;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.github.s7connector.impl.serializer.converter.ShortConverter;
-
-public class ShortConverterTest
-{
+public class ShortConverterTest {
 	@Test
-	public void insert1()
-	{
-		
+	public void insert1() {
+
 		ShortConverter c = new ShortConverter();
-		byte[] buffer = new byte[] { 0, 0, 0, 0 };
+		byte[] buffer = new byte[]{0, 0, 0, 0};
 		c.insert((short) 666, buffer, 0, 0, 2);
-		for (int i=0; i<buffer.length; i++)
-			System.out.print( Integer.toHexString(buffer[i] & 0xFF) + ",");
-		
-		Assert.assertEquals( 0x02, (byte)buffer[0]);
-		Assert.assertEquals( (byte)0x9a, (byte)buffer[1]);
+		for (int i = 0; i < buffer.length; i++)
+			System.out.print(Integer.toHexString(buffer[i] & 0xFF) + ",");
+
+		Assert.assertEquals(0x02, buffer[0]);
+		Assert.assertEquals((byte) 0x9a, buffer[1]);
 	}
 
 	@Test
-	public void insert2()
-	{
+	public void insert2() {
 		ShortConverter c = new ShortConverter();
-		byte[] buffer = new byte[] { 0, 0, 0, 0 };
-		c.insert((short)666, buffer, 1, 0, 2);
-		Assert.assertEquals( 0x00, (byte)buffer[0]);
-		Assert.assertEquals( 0x02, (byte)buffer[1]);
-		Assert.assertEquals( (byte)0x9a, (byte)buffer[2]);
-		Assert.assertEquals( 0x00, (byte)buffer[3]);
+		byte[] buffer = new byte[]{0, 0, 0, 0};
+		c.insert((short) 666, buffer, 1, 0, 2);
+		Assert.assertEquals(0x00, buffer[0]);
+		Assert.assertEquals(0x02, buffer[1]);
+		Assert.assertEquals((byte) 0x9a, buffer[2]);
+		Assert.assertEquals(0x00, buffer[3]);
 	}
 
 	@Test
-	public void extract1()
-	{
+	public void extract1() {
 		ShortConverter c = new ShortConverter();
-		byte[] buffer = new byte[]{ 0x02, (byte)0x9a, 0, 0 };
+		byte[] buffer = new byte[]{0x02, (byte) 0x9a, 0, 0};
 
-		for (int i=0; i<buffer.length; i++)
-			System.out.print( Integer.toHexString(buffer[i] & 0xFF) + ",");
+		for (int i = 0; i < buffer.length; i++)
+			System.out.print(Integer.toHexString(buffer[i] & 0xFF) + ",");
 
 		int i = c.extract(Short.class, buffer, 0, 0);
 		Assert.assertEquals(666, i);
 	}
-	
-	@Test
-	public void extract2()
-	{
-		ShortConverter c = new ShortConverter();
-		byte[] buffer = new byte[]{ 0, 0, 0x02, (byte)0x9a, 0, 0 };
 
-		for (int i=0; i<buffer.length; i++)
-			System.out.print( Integer.toHexString(buffer[i] & 0xFF) + ",");
+	@Test
+	public void extract2() {
+		ShortConverter c = new ShortConverter();
+		byte[] buffer = new byte[]{0, 0, 0x02, (byte) 0x9a, 0, 0};
+
+		for (int i = 0; i < buffer.length; i++)
+			System.out.print(Integer.toHexString(buffer[i] & 0xFF) + ",");
 
 		int i = c.extract(Short.class, buffer, 2, 0);
 		Assert.assertEquals(666, i);
 	}
-	
+
 }

@@ -15,37 +15,34 @@ limitations under the License.
 */
 package com.github.s7connector.test.example;
 
-import com.github.s7connector.api.DaveArea;
+import com.github.s7connector.api.PlcArea;
 import com.github.s7connector.api.S7Connector;
 import com.github.s7connector.api.factory.S7ConnectorFactory;
 
 /**
  * @author Thomas Rudin (thomas@rudin-informatik.ch)
- *
  */
-public class PlainTutorialExample
-{
-	
-	public static void main(String[] args) throws Exception
-	{
+public class PlainTutorialExample {
+
+	public static void main(String[] args) throws Exception {
 		//Open TCP Connection
-		S7Connector connector = 
+		S7Connector connector =
 				S7ConnectorFactory
-				.buildTCPConnector()
-				.withHost("10.0.0.220")
-				.withRack(0)
-				.withSlot(2)
-				.build();
-		
+						.buildTCPConnector()
+						.withHost("10.0.0.220")
+						.withRack(0)
+						.withSlot(2)
+						.build();
+
 		//Read from DB100 10 bytes
-		byte[] bs = connector.read(DaveArea.DB, 100, 10, 0);
-		
+		byte[] bs = connector.read(PlcArea.DB, 100, 10, 0);
+
 		//Set some bytes
 		bs[0] = 0x00;
-		
+
 		//Write to DB100 10 bytes
-		connector.write(DaveArea.DB, 101, 0, bs);
-		
+		connector.write(PlcArea.DB, 101, 0, bs);
+
 		//Close connection
 		connector.close();
 	}

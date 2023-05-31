@@ -27,13 +27,25 @@ import com.github.s7connector.impl.S7TCPConnection;
 public class S7ConnectorFactory {
 
     /**
+     * @param type choose a siemens plc type to build a tcp connector.
+     * @return returns a new TCP connection builder
+     */
+    public static TCPConnectionBuilder buildTCPConnector(SiemensPLCS type) {
+        return new TCPConnectionBuilder(type);
+    }
+
+    public static TCPConnectionBuilder buildTCPConnector() {
+        return new TCPConnectionBuilder(SiemensPLCS.SNon200);
+    }
+
+    /**
      * TCP Connection builder
      */
     public static class TCPConnectionBuilder {
 
         private String host;
 
-        private SiemensPLCS plcsType;
+        private final SiemensPLCS plcsType;
 
         private int type = 1, rack = 0, slot = 2, port = 102, timeout = 2000;
 
@@ -96,18 +108,6 @@ public class S7ConnectorFactory {
             return this;
         }
 
-    }
-
-    /**
-     * @param type choose a siemens plc type to build a tcp connector.
-     * @return returns a new TCP connection builder
-     */
-    public static TCPConnectionBuilder buildTCPConnector(SiemensPLCS type) {
-        return new TCPConnectionBuilder(type);
-    }
-
-    public static TCPConnectionBuilder buildTCPConnector() {
-        return new TCPConnectionBuilder(SiemensPLCS.SNon200);
     }
 
 }

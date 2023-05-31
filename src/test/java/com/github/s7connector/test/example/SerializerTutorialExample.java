@@ -22,35 +22,32 @@ import com.github.s7connector.api.factory.S7SerializerFactory;
 
 /**
  * @author Thomas Rudin (thomas@rudin-informatik.ch)
- *
  */
-public class SerializerTutorialExample
-{
-	
-	public static void main(String[] args) throws Exception
-	{
-		//Open TCP Connection
-		S7Connector connector = 
-				S7ConnectorFactory
-				.buildTCPConnector()
-				.withHost("10.0.0.220")
-				.build();
-		
-		//Create serializer
-		S7Serializer serializer = S7SerializerFactory.buildSerializer(connector);
-		
-		//dispense bean from DB100 and offset 0
-		MyDataBean bean1 = serializer.dispense(MyDataBean.class, 100, 0);
-		
-		//Set some values
-		bean1.bit1 = true;
-		bean1.myNumber = 123;
-		
-		//Store bean to DB101 offset 0
-		serializer.store(bean1, 101, 0);
-		
-		//Close connection
-		connector.close();
-	}
+public class SerializerTutorialExample {
+
+    public static void main(String[] args) throws Exception {
+        //Open TCP Connection
+        S7Connector connector =
+                S7ConnectorFactory
+                        .buildTCPConnector()
+                        .withHost("10.0.0.220")
+                        .build();
+
+        //Create serializer
+        S7Serializer serializer = S7SerializerFactory.buildSerializer(connector);
+
+        //dispense bean from DB100 and offset 0
+        MyDataBean bean1 = serializer.dispense(MyDataBean.class, 100, 0);
+
+        //Set some values
+        bean1.bit1 = true;
+        bean1.myNumber = 123;
+
+        //Store bean to DB101 offset 0
+        serializer.store(bean1, 101, 0);
+
+        //Close connection
+        connector.close();
+    }
 
 }

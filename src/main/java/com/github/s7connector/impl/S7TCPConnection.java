@@ -15,11 +15,11 @@ limitations under the License.
 */
 package com.github.s7connector.impl;
 
-import com.github.s7connector.api.DaveArea;
+import com.github.s7connector.api.PlcArea;
 import com.github.s7connector.api.SiemensPLCS;
 import com.github.s7connector.exception.S7Exception;
 import com.github.s7connector.impl.nodave.Nodave;
-import com.github.s7connector.impl.nodave.PLCinterface;
+import com.github.s7connector.impl.nodave.PlcInterface;
 import com.github.s7connector.impl.nodave.TCPConnection;
 
 import java.net.InetSocketAddress;
@@ -34,25 +34,13 @@ import java.net.Socket;
 public final class S7TCPConnection extends S7BaseConnection {
 
     /**
-     * The Connection
-     */
-    private TCPConnection dc;
-
-    /**
-     * The Interface
-     */
-    private PLCinterface di;
-
-    /**
      * The Host to connect to
      */
     private final String host;
-
     /**
      * The port to connect to
      */
     private final int port;
-
     /**
      * Connection type:
      * 1 = PG
@@ -61,17 +49,22 @@ public final class S7TCPConnection extends S7BaseConnection {
      * 4-10 = Generic
      */
     private final int type;
-
     /**
      * Rack and slot number
      */
     private final int rack, slot;
-
     /**
      * Timeout number
      */
     private final int timeout;
-
+    /**
+     * The Connection
+     */
+    private TCPConnection dc;
+    /**
+     * The Interface
+     */
+    private PlcInterface di;
     /**
      * The Socket
      */
@@ -80,7 +73,7 @@ public final class S7TCPConnection extends S7BaseConnection {
     /**
      * The connect device type,such as S200
      */
-    private SiemensPLCS plcType;
+    private final SiemensPLCS plcType;
 
     /**
      * Creates a new Instance to the given host, rack, slot and port
@@ -141,8 +134,8 @@ public final class S7TCPConnection extends S7BaseConnection {
                     protocol = Nodave.PROTOCOL_ISOTCP;
                     break;
             }
-            this.di = new PLCinterface(this.socket.getOutputStream(), this.socket.getInputStream(), "IF1",
-                    DaveArea.LOCAL.getCode(), // TODO Local MPI-Address?
+            this.di = new PlcInterface(this.socket.getOutputStream(), this.socket.getInputStream(), "IF1",
+                    PlcArea.LOCAL.getCode(), // TODO Local MPI-Address?
                     protocol);
 
             this.dc = new TCPConnection(this.di, this.type, this.rack, this.slot);

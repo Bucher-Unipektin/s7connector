@@ -16,47 +16,41 @@ limitations under the License.
 package com.github.s7connector.test.converter;
 
 
+import com.github.s7connector.impl.serializer.converter.BitConverter;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.github.s7connector.impl.serializer.converter.BitConverter;
+public class BitConverterTest {
 
-public class BitConverterTest
-{
-	
 	@Test
-	public void insert1()
-	{
+	public void insert1() {
 		BitConverter c = new BitConverter();
-		byte[] buffer = new byte[] { 0x55 };
+		byte[] buffer = new byte[]{0x55};
 		c.insert(true, buffer, 0, 0, 1);
-		Assert.assertEquals( (int)(0x55 | 0x01), (int)buffer[0]);
+		Assert.assertEquals(0x55 | 0x01, (int) buffer[0]);
 	}
 
 	@Test
-	public void insert2()
-	{
+	public void insert2() {
 		BitConverter c = new BitConverter();
-		byte[] buffer = new byte[] { 0x55 };
+		byte[] buffer = new byte[]{0x55};
 		c.insert(true, buffer, 0, 1, 1);
-		Assert.assertEquals( (int)(0x55 | (0x01<<1)), (int)buffer[0]);
+		Assert.assertEquals(0x55 | (0x01 << 1), (int) buffer[0]);
 	}
 
 	@Test
-	public void insert3()
-	{
+	public void insert3() {
 		BitConverter c = new BitConverter();
-		byte[] buffer = new byte[] { 0x55, (byte)0xAA };
+		byte[] buffer = new byte[]{0x55, (byte) 0xAA};
 		c.insert(true, buffer, 1, 1, 1);
-		Assert.assertEquals( (int)(0x55), (int)buffer[0]);
-		Assert.assertEquals( (int)((byte)0xAA | (0x01<<1)), (int)buffer[1]);
+		Assert.assertEquals(0x55, (int) buffer[0]);
+		Assert.assertEquals((byte) 0xAA | (0x01 << 1), (int) buffer[1]);
 	}
 
 	@Test
-	public void extract1()
-	{
+	public void extract1() {
 		BitConverter c = new BitConverter();
-		byte[] buffer = new byte[] {0x01};
+		byte[] buffer = new byte[]{0x01};
 		boolean b = c.extract(Boolean.class, buffer, 0, 0);
 		Assert.assertTrue(b);
 	}
@@ -65,8 +59,8 @@ public class BitConverterTest
 	//thx to @mfriedemann (https://github.com/mfriedemann)
 	@Test
 	public void testInsertFalseBits() {
-		byte[] buffer = new byte[] { 0b0101_0101 };
-		int expected =               0b0101_0100;
+		byte[] buffer = new byte[]{0b0101_0101};
+		int expected = 0b0101_0100;
 		new BitConverter().insert(false, buffer, 0, 0, 1);
 		Assert.assertEquals(expected, (int) buffer[0]);
 	}

@@ -15,14 +15,13 @@ limitations under the License.
 */
 package com.github.s7connector.impl.serializer.parser;
 
-import java.lang.reflect.Field;
-
+import com.github.s7connector.api.S7Serializable;
+import com.github.s7connector.api.S7Type;
+import com.github.s7connector.api.annotation.S7Variable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.s7connector.api.S7Serializable;
-import com.github.s7connector.api.annotation.S7Variable;
-import com.github.s7connector.api.S7Type;
+import java.lang.reflect.Field;
 
 public final class BeanParser {
 
@@ -33,7 +32,7 @@ public final class BeanParser {
 
 	/**
 	 * Returns the wrapper for the primitive type
-	 * 
+	 *
 	 * @param primitiveType
 	 * @return
 	 */
@@ -58,7 +57,7 @@ public final class BeanParser {
 
 	/**
 	 * Parses a Class
-	 * 
+	 *
 	 * @param jclass
 	 * @return
 	 * @throws Exception
@@ -125,6 +124,7 @@ public final class BeanParser {
 					for (final BeanEntry parsedEntry : res.entries) {
 						if (parsedEntry.byteOffset == entry.byteOffset) {
 							offsetOfBitAlreadyKnown = true;
+							break;
 						}
 					}
 					if (!offsetOfBitAlreadyKnown) {
@@ -143,7 +143,7 @@ public final class BeanParser {
 
 	/**
 	 * Parses an Object
-	 * 
+	 *
 	 * @param obj
 	 * @return
 	 * @throws Exception

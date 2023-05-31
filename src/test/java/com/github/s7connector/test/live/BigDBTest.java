@@ -15,67 +15,60 @@ limitations under the License.
 */
 package com.github.s7connector.test.live;
 
-import java.util.Random;
-
-import org.junit.Assert;
-
 import com.github.s7connector.api.S7Connector;
 import com.github.s7connector.api.S7Serializer;
+import com.github.s7connector.api.S7Type;
 import com.github.s7connector.api.annotation.S7Variable;
 import com.github.s7connector.api.factory.S7ConnectorFactory;
 import com.github.s7connector.api.factory.S7SerializerFactory;
-import com.github.s7connector.api.S7Type;
+import org.junit.Assert;
 
-public class BigDBTest
-{
+import java.util.Random;
+
+public class BigDBTest {
 
 	/**
-	 * @param args
-	 * 
-	 * Instructions:
-	 * 
-	 * Create a DB100 with 1024 bytes in it
-	 * 
+	 * @param args Instructions:
+	 *             <p>
+	 *             Create a DB100 with 1024 bytes in it
 	 */
-	public static void main(String[] args) throws Exception
-	{
-		S7Connector c = 
+	public static void main(String[] args) throws Exception {
+		S7Connector c =
 				S7ConnectorFactory
-				.buildTCPConnector()
-				.withHost("10.0.0.220")
-				.build();
-		
+						.buildTCPConnector()
+						.withHost("10.0.0.220")
+						.build();
+
 		S7Serializer s = S7SerializerFactory.buildSerializer(c);
-		
+
 		DB out = new DB();
-		
+
 		//Fill with random data
 		Random r = new Random();
-		for (int i=0; i<out.bytes.length; i++)
-			out.bytes[i] = (byte)r.nextInt(256);
+		for (int i = 0; i < out.bytes.length; i++)
+			out.bytes[i] = (byte) r.nextInt(256);
 
 		//Send
 		long storeBegin = System.currentTimeMillis();
 		s.store(out, 100, 0);
 		long storeEnd = System.currentTimeMillis();
-		
+
 		//Receive
 		long dispenseBegin = System.currentTimeMillis();
 		DB in = s.dispense(DB.class, 100, 0);
 		long dispenseEnd = System.currentTimeMillis();
-		
+
 		c.close();
-		
+
 		Assert.assertArrayEquals(out.bytes, in.bytes);
-		
+
 		System.out.println("OK:");
-		System.out.println("Storing took: " + ( storeEnd - storeBegin ) + " ms");
+		System.out.println("Storing took: " + (storeEnd - storeBegin) + " ms");
 		System.out.println("Dispensing took: " + (dispenseEnd - dispenseBegin) + " ms");
 	}
-	
-	public static class DB
-	{
-		@S7Variable(type=S7Type.BYTE, byteOffset=0, arraySize=4096)
+
+	public static class DB {
+		@S7Variable(type = S7Type.BYTE, byteOffset = 0, arraySize = 4096)
 		public Byte[] bytes = new Byte[4096];
 	}
 
