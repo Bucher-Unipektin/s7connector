@@ -85,7 +85,7 @@ public abstract class S7BaseConnection implements S7Connector {
 
 	/** {@inheritDoc} */
 	@Override
-	public synchronized byte[] read(final DaveArea area, final int areaNumber, final int bytes, final int offset) throws IOException {
+	public synchronized byte[] read(final DaveArea area, final int areaNumber, final int bytes, final int offset) throws IOException, InterruptedException {
 		if (bytes > MAX_SIZE) {
 			final byte[] ret = new byte[bytes];
 

@@ -287,13 +287,10 @@ public abstract class S7Connection {
 		return res;
 	}
 
-	public int readBytes(final DaveArea area, final int DBnum, final int start, final int len, final byte[] buffer) throws IOException {
+	public int readBytes(final DaveArea area, final int DBnum, final int start, final int len, final byte[] buffer) throws IOException, InterruptedException {
 		int res = 0;
-		try {
-			this.semaphore.acquire();
-		} catch (final InterruptedException e) {
-			e.printStackTrace();
-		}
+		this.semaphore.acquire();
+
 		final PDU p1 = new PDU(this.msgOut, this.PDUstartOut);
 		p1.initReadRequest();
 		p1.addVarToReadRequest(area, DBnum, start, len);

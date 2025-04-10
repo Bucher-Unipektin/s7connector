@@ -28,7 +28,7 @@ public interface S7Connector extends Closeable {
 	 * @param offset
 	 * @return
 	 */
-	public byte[] read(DaveArea area, int areaNumber, int bytes, int offset) throws IOException;
+	public byte[] read(DaveArea area, int areaNumber, int bytes, int offset) throws IOException, InterruptedException;
 
 	/**
 	 * Writes an area
