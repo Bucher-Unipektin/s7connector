@@ -73,12 +73,7 @@ public final class PLCinterface {
 		}
 	}
 
-	public void write(final byte[] b, final int start, final int len) {
-		try {
+	public void write(final byte[] b, final int start, final int len) throws IOException {
 			this.out.write(b, start, len);
-		} catch (final IOException e) {
-			System.err.println("Interface.write: " + e);
-		}
 	}
-
 }

@@ -19,6 +19,8 @@
 */
 package com.github.s7connector.impl.nodave;
 
+import java.io.IOException;
+
 /**
  * The Class TCPConnection.
  */
@@ -62,7 +64,7 @@ public final class TCPConnection extends S7Connection {
      *
      * @return the int
      */
-    public int connectPLC() {
+    public int connectPLC() throws IOException {
         int packetLength;
         if (iface.protocol == Nodave.PROTOCOL_ISOTCP243) {
         	final byte[] b243 = {
@@ -96,7 +98,7 @@ public final class TCPConnection extends S7Connection {
      * {@inheritDoc}
      */
     @Override
-    public int exchange(final PDU p1) {
+    public int exchange(final PDU p1) throws IOException {
         this.msgOut[4] = (byte) 0x02;
         this.msgOut[5] = (byte) 0xf0;
         this.msgOut[6] = (byte) 0x80;
@@ -127,7 +129,7 @@ public final class TCPConnection extends S7Connection {
      * @param size the size
      * @return the int
      */
-    protected int sendISOPacket(int size) {
+    protected int sendISOPacket(int size) throws IOException {
         size += 4;
         this.msgOut[0] = (byte) 0x03;
         this.msgOut[1] = (byte) 0x0;

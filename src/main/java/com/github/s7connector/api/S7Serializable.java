@@ -16,6 +16,7 @@ limitations under the License.
 package com.github.s7connector.api;
 
 import com.github.s7connector.api.S7Type;
+import com.github.s7connector.exception.S7Exception;
 
 /**
  * The Interface S7Serializable API
@@ -37,7 +38,7 @@ public interface S7Serializable {
 	 *            the bit offset
 	 * @return the t
 	 */
-	public <T> T extract(Class<T> targetClass, byte[] buffer, int byteOffset, int bitOffset);
+	public <T> T extract(Class<T> targetClass, byte[] buffer, int byteOffset, int bitOffset) throws S7Exception;
 
 	/**
 	 * Returns the S7-Type.
@@ -74,5 +75,5 @@ public interface S7Serializable {
 	 * @param size
 	 *            the size
 	 */
-	public void insert(Object javaType, byte[] buffer, int byteOffset, int bitOffset, int size);
+	public void insert(Object javaType, byte[] buffer, int byteOffset, int bitOffset, int size) throws S7Exception;
 }

@@ -22,6 +22,7 @@ import com.github.s7connector.impl.nodave.Nodave;
 import com.github.s7connector.impl.nodave.PLCinterface;
 import com.github.s7connector.impl.nodave.TCPConnection;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
@@ -100,26 +101,15 @@ public final class S7TCPConnection extends S7BaseConnection {
     }
 
     @Override
-    public void close() {
-        try {
+    public void close() throws IOException {
             this.socket.close();
-        } catch (final Exception e) {
-            e.printStackTrace();
-        }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void finalize() throws Throwable {
-        this.close();
-    }
 
     /**
      * Sets up the socket
      */
-    private void setupSocket() {
+    private void setupSocket() throws S7Exception {
         try {
             this.socket = new Socket();
             this.socket.setSoTimeout(this.timeout);
@@ -142,7 +132,7 @@ public final class S7TCPConnection extends S7BaseConnection {
                     break;
             }
             this.di = new PLCinterface(this.socket.getOutputStream(), this.socket.getInputStream(), "IF1",
-                    DaveArea.LOCAL.getCode(), // TODO Local MPI-Address?
+                    DaveArea.LOCAL.getCode(),
                     protocol);
 
             this.dc = new TCPConnection(this.di, this.type, this.rack, this.slot);
@@ -153,7 +143,5 @@ public final class S7TCPConnection extends S7BaseConnection {
         } catch (final Exception e) {
             throw new S7Exception("constructor", e);
         }
-
     }
-
 }

@@ -49,11 +49,10 @@ public class ConnectionDropTest {
 
 		try {
 			connector.read(DaveArea.DB, 1, 1, 0);
-		} catch(IllegalArgumentException e){
-			return;
-		}
-
 		throw new IllegalArgumentException("fail-case not reached!");
+
+		} catch(IOException ignored){
+		}
 	}
 
 }

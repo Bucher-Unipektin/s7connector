@@ -18,7 +18,7 @@ package com.github.s7connector.exception;
 /**
  * The Class S7Exception is an exception related to S7 Communication
  */
-public final class S7Exception extends RuntimeException {
+public final class S7Exception extends Exception {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -4761415733559374116L;

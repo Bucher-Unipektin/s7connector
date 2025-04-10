@@ -20,6 +20,7 @@ import com.github.s7connector.api.annotation.Datablock;
 import com.github.s7connector.api.annotation.S7Variable;
 import com.github.s7connector.api.factory.S7SerializerFactory;
 import com.github.s7connector.api.S7Type;
+import com.github.s7connector.exception.S7Exception;
 import com.github.s7connector.test.connector.EchoConnector;
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,7 +29,7 @@ public class DWORDSerializerTest {
 
 
 	@Test
-	public void test() {
+	public void test() throws S7Exception {
 		EchoConnector c = new EchoConnector();
 		
 		S7Serializer p = S7SerializerFactory.buildSerializer(c);
