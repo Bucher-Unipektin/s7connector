@@ -105,7 +105,6 @@ public abstract class S7BaseConnection implements S7Connector {
 		}
 	}
 
-
 	/** {@inheritDoc} */
 	@Override
 	public synchronized void write(final DaveArea area, final int areaNumber, final int offset, final byte[] buffer) throws IOException {
@@ -126,6 +125,4 @@ public abstract class S7BaseConnection implements S7Connector {
 			checkResult(ret);
 		}
 	}
-
-
 }
