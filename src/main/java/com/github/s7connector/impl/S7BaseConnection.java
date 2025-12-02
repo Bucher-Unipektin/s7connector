@@ -21,6 +21,7 @@ import com.github.s7connector.impl.nodave.Nodave;
 import com.github.s7connector.impl.nodave.S7Connection;
 
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Base-Connection for the S7-PLC Connection Libnodave:
@@ -30,99 +31,151 @@ import java.io.IOException;
  */
 public abstract class S7BaseConnection implements S7Connector {
 
-	/** The Constant MAX_SIZE. */
-	private static final int MAX_SIZE = 96;
+    /**
+     * The Constant MAX_SIZE.
+     */
+    private static final int MAX_SIZE = 96;
 
-	/** The Constant PROPERTY_AREA. */
-	public static final String PROPERTY_AREA = "area";
+    /**
+     * The Constant PROPERTY_AREA.
+     */
+    public static final String PROPERTY_AREA = "area";
 
-	/** The Constant PROPERTY_AREANUMBER. */
-	public static final String PROPERTY_AREANUMBER = "areanumber";
+    /**
+     * The Constant PROPERTY_AREANUMBER.
+     */
+    public static final String PROPERTY_AREANUMBER = "areanumber";
 
-	/** The Constant PROPERTY_BYTES. */
-	public static final String PROPERTY_BYTES = "bytes";
+    /**
+     * The Constant PROPERTY_BYTES.
+     */
+    public static final String PROPERTY_BYTES = "bytes";
 
-	/** The Constant PROPERTY_OFFSET. */
-	public static final String PROPERTY_OFFSET = "offset";
+    /**
+     * The Constant PROPERTY_OFFSET.
+     */
+    public static final String PROPERTY_OFFSET = "offset";
 
-	/**
-	 * Checks the Result.
-	 *
-	 * @param libnodaveResult
-	 *            the libnodave result
-	 */
-	public static void checkResult(final int libnodaveResult) {
-		if (libnodaveResult != Nodave.RESULT_OK) {
-			final String msg = Nodave.strerror(libnodaveResult);
-			throw new IllegalArgumentException("Result: " + msg);
-		}
-	}
+    /**
+     * Checks the Result.
+     *
+     * @param libnodaveResult the libnodave result
+     */
+    public static void checkResult(final int libnodaveResult) {
+        if (libnodaveResult != Nodave.RESULT_OK) {
+            final String msg = Nodave.strerror(libnodaveResult);
+            throw new IllegalArgumentException("Result: " + msg);
+        }
+    }
 
-	/**
-	 * Dump data
-	 *
-	 * @param b
-	 *            the byte stream
-	 */
-	protected static void dump(final byte[] b) {
-		for (final byte element : b) {
-			System.out.print(Integer.toHexString(element & 0xFF) + ",");
-		}
-	}
+    /**
+     * Dump data
+     *
+     * @param b the byte stream
+     */
+    protected static void dump(final byte[] b) {
+        for (final byte element : b) {
+            System.out.print(Integer.toHexString(element & 0xFF) + ",");
+        }
+    }
 
-	/** The dc. */
-	private S7Connection dc;
+    /**
+     * The dc.
+     */
+    private S7Connection dc;
 
-	/**
-	 * Initialize the connection
-	 *
-	 * @param dc
-	 *            the connection instance
-	 */
-	protected void init(final S7Connection dc) {
-		this.dc = dc;
-	}
+    /**
+     * Lock for thread-safe operations
+     */
+    private final ReentrantLock lock = new ReentrantLock();
 
-	/** {@inheritDoc} */
-	@Override
-	public synchronized byte[] read(final DaveArea area, final int areaNumber, final int bytes, final int offset) throws IOException, InterruptedException {
-		if (bytes > MAX_SIZE) {
-			final byte[] ret = new byte[bytes];
+    /**
+     * Initialize the connection
+     *
+     * @param dc the connection instance
+     */
+    protected void init(final S7Connection dc) {
+        this.dc = dc;
+    }
 
-			final byte[] currentBuffer = this.read(area, areaNumber, MAX_SIZE, offset);
-			System.arraycopy(currentBuffer, 0, ret, 0, currentBuffer.length);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public byte[] read(final DaveArea area, final int areaNumber, final int bytes, final int offset) throws IOException, InterruptedException {
+        // Always acquire lock for the entire operation to ensure atomicity
+        this.lock.lock();
+        try {
+            return readInternal(area, areaNumber, bytes, offset);
+        } finally {
+            this.lock.unlock();
+        }
+    }
 
-			final byte[] nextBuffer = this.read(area, areaNumber, bytes - MAX_SIZE, offset + MAX_SIZE);
-			System.arraycopy(nextBuffer, 0, ret, currentBuffer.length, nextBuffer.length);
+    /**
+     * Internal read implementation without locking (lock must be held by caller).
+     * Handles recursive splitting for large reads.
+     */
+    private byte[] readInternal(final DaveArea area, final int areaNumber, final int bytes, final int offset) throws IOException {
+        if (bytes > MAX_SIZE) {
+            // Handle large reads by splitting into chunks
+            // Note: Lock is already held by public read() method
+            final byte[] ret = new byte[bytes];
 
-			return ret;
-		} else {
-			final byte[] buffer = new byte[bytes];
-			final int ret = this.dc.readBytes(area, areaNumber, offset, bytes, buffer);
+            final byte[] currentBuffer = readInternal(area, areaNumber, MAX_SIZE, offset);
+            System.arraycopy(currentBuffer, 0, ret, 0, currentBuffer.length);
 
-			checkResult(ret);
-			return buffer;
-		}
-	}
+            final byte[] nextBuffer = readInternal(area, areaNumber, bytes - MAX_SIZE, offset + MAX_SIZE);
+            System.arraycopy(nextBuffer, 0, ret, currentBuffer.length, nextBuffer.length);
 
-	/** {@inheritDoc} */
-	@Override
-	public synchronized void write(final DaveArea area, final int areaNumber, final int offset, final byte[] buffer) throws IOException {
-		if (buffer.length > MAX_SIZE) {
-			// Split buffer
-			final byte[] subBuffer = new byte[MAX_SIZE];
-			final byte[] nextBuffer = new byte[buffer.length - subBuffer.length];
+            return ret;
 
-			System.arraycopy(buffer, 0, subBuffer, 0, subBuffer.length);
-			System.arraycopy(buffer, MAX_SIZE, nextBuffer, 0, nextBuffer.length);
+        } else {
+            // Single read operation - lock already held
+            final byte[] buffer = new byte[bytes];
+            final int ret = this.dc.readBytes(area, areaNumber, offset, bytes, buffer);
 
-			this.write(area, areaNumber, offset, subBuffer);
-			this.write(area, areaNumber, offset + subBuffer.length, nextBuffer);
-		} else {
-			// Size fits
-			final int ret = this.dc.writeBytes(area, areaNumber, offset, buffer.length, buffer);
-			// Check return-value
-			checkResult(ret);
-		}
-	}
+            checkResult(ret);
+            return buffer;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void write(final DaveArea area, final int areaNumber, final int offset, final byte[] buffer) throws IOException {
+        // Always acquire lock for the entire operation to ensure atomicity
+        this.lock.lock();
+        try {
+            writeInternal(area, areaNumber, offset, buffer);
+        } finally {
+            this.lock.unlock();
+        }
+    }
+
+    /**
+     * Internal write implementation without locking (lock must be held by caller).
+     * Handles recursive splitting for large writes.
+     */
+    private void writeInternal(final DaveArea area, final int areaNumber, final int offset, final byte[] buffer) throws IOException {
+        if (buffer.length > MAX_SIZE) {
+            // Handle large writes by splitting into chunks
+            // Note: Lock is already held by public write() method
+            final byte[] subBuffer = new byte[MAX_SIZE];
+            final byte[] nextBuffer = new byte[buffer.length - subBuffer.length];
+
+            System.arraycopy(buffer, 0, subBuffer, 0, subBuffer.length);
+            System.arraycopy(buffer, MAX_SIZE, nextBuffer, 0, nextBuffer.length);
+
+            writeInternal(area, areaNumber, offset, subBuffer);
+            writeInternal(area, areaNumber, offset + subBuffer.length, nextBuffer);
+
+        } else {
+            // Single write operation - lock already held
+            final int ret = this.dc.writeBytes(area, areaNumber, offset, buffer.length, buffer);
+            // Check return-value
+            checkResult(ret);
+        }
+    }
 }
