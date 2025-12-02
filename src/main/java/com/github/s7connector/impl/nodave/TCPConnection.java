@@ -50,16 +50,28 @@ public final class TCPConnection extends S7Connection {
      * Instantiates a new TCP connection.
      *
      * @param ifa  the plc interface
-     * @param rack the rack
-     * @param slot the slot
+     * @param type the connection type (1=PG, 2=OP, 3-10=Generic)
+     * @param rack the rack (typically 0-7)
+     * @param slot the slot (typically 0-31)
+     * @throws IllegalArgumentException if parameters are out of valid range
      */
     public TCPConnection(final PLCinterface ifa, final int type, final int rack, final int slot) {
-        super(ifa);
+        super(ifa, 7, 7);  // TCPConnection uses PDU start offsets of 7
+
+        // Validate parameters to prevent protocol errors
+        if (rack < 0 || rack > 7) {
+            throw new IllegalArgumentException("Rack must be between 0 and 7, but was: " + rack);
+        }
+        if (slot < 0 || slot > 31) {
+            throw new IllegalArgumentException("Slot must be between 0 and 31, but was: " + slot);
+        }
+        if (type < 1 || type > 10) {
+            throw new IllegalArgumentException("Type must be between 1 and 10, but was: " + type);
+        }
+
         this.type = type;
         this.rack = rack;
         this.slot = slot;
-        this.PDUstartIn = 7;
-        this.PDUstartOut = 7;
     }
 
     /**
@@ -135,13 +147,28 @@ public final class TCPConnection extends S7Connection {
      * Read iso packet.
      *
      * @return the int
+     * @throws IOException if an I/O error occurs while reading
      */
-    protected int readISOPacket() {
+    protected int readISOPacket() throws IOException {
         int res = this.iface.read(this.msgIn, 0, 4);
         if (res == 4) {
-            final int len = (0x100 * this.msgIn[2]) + this.msgIn[3];
+            // Java bytes are signed - must mask with 0xFF to get unsigned value
+            // Without masking: msgIn[2] = 0xFF (byte -1) → -256 instead of 255
+            final int len = ((this.msgIn[2] & 0xFF) * 0x100) + (this.msgIn[3] & 0xFF);
+
+            // Validate length to prevent buffer overflow
+            if (len < 0 || len > this.msgIn.length - 4) {
+                logger.error("Invalid packet length received: {} (max allowed: {})", len, this.msgIn.length - 4);
+                throw new IOException("Invalid ISO packet length: " + len);
+            }
+
             res += this.iface.read(this.msgIn, 4, len);
+        } else if (res > 0) {
+            // Incomplete header read - this indicates a protocol issue or connection problem
+            logger.warn("Incomplete ISO packet header: expected 4 bytes, got {} bytes. Connection may be unstable.", res);
+            return 0;
         } else {
+            // No data available (res == 0) or error
             return 0;
         }
         return res;
@@ -155,6 +182,13 @@ public final class TCPConnection extends S7Connection {
      */
     protected int sendISOPacket(int size) throws IOException {
         size += 4;
+
+        // Validate size to prevent buffer overflow
+        if (size < 4 || size > this.msgOut.length) {
+            logger.error("Invalid ISO packet size: {} (must be between 4 and {})", size, this.msgOut.length);
+            throw new IOException("Invalid ISO packet size: " + size);
+        }
+
         this.msgOut[0] = (byte) 0x03;
         this.msgOut[1] = (byte) 0x0;
         this.msgOut[2] = (byte) (size / 0x100);

@@ -111,13 +111,24 @@ public final class S7TCPConnection extends S7BaseConnection {
             logger.info("Successfully established connection to {}:{}", host, port);
         } catch (S7Exception e) {
             logger.error("Failed to create S7TCP connection to {}:{}: {}", host, port, e.getMessage(), e);
+            // Mark as closed since connection failed
+            markAsClosed();
             throw e;
         }
     }
 
     @Override
     public void close() throws IOException {
+        // Check if already closed to prevent double-close issues
+        if (isClosed()) {
+            logger.debug("Connection to {}:{} already closed, skipping", host, port);
+            return;
+        }
+
         logger.info("Closing S7TCP connection to {}:{}", host, port);
+
+        // Mark as closed first to prevent new operations
+        markAsClosed();
 
         try {
             if (this.socket != null && !this.socket.isClosed()) {
@@ -140,7 +151,12 @@ public final class S7TCPConnection extends S7BaseConnection {
         try {
             logger.debug("Creating socket for {}:{} with timeout {}ms", host, port, timeout);
             this.socket = new Socket();
+            // Set timeout for connection establishment
             this.socket.setSoTimeout(this.timeout);
+            // Enable TCP keep-alive to detect broken connections
+            this.socket.setKeepAlive(true);
+            // Disable Nagle's algorithm for low-latency communication
+            this.socket.setTcpNoDelay(true);
 
             logger.debug("Connecting to {}:{}...", host, port);
             this.socket.connect(new InetSocketAddress(this.host, this.port), this.timeout);
@@ -181,21 +197,46 @@ public final class S7TCPConnection extends S7BaseConnection {
             super.init(this.dc);
 
         } catch (SocketTimeoutException e) {
+            // Close socket to prevent resource leak
+            closeSocketSafely();
             String msg = String.format("Connection timeout while connecting to %s:%d after %dms", host, port, timeout);
             logger.error(msg, e);
             throw new S7Exception(msg, e);
         } catch (IOException e) {
+            // Close socket to prevent resource leak
+            closeSocketSafely();
             String msg = String.format("IOException while setting up connection to %s:%d: %s", host, port, e.getMessage());
             logger.error(msg, e);
             throw new S7Exception(msg, e);
         } catch (IllegalArgumentException e) {
+            // Close socket to prevent resource leak
+            closeSocketSafely();
             String msg = String.format("PLC connection check failed for %s:%d: %s", host, port, e.getMessage());
             logger.error(msg, e);
             throw new S7Exception(msg, e);
         } catch (final Exception e) {
+            // Close socket to prevent resource leak
+            closeSocketSafely();
             String msg = String.format("Unexpected error during connection setup to %s:%d: %s", host, port, e.getMessage());
             logger.error(msg, e);
             throw new S7Exception(msg, e);
+        }
+    }
+
+    /**
+     * Safely closes the socket, suppressing any exceptions.
+     * Used internally for cleanup in error scenarios to prevent resource leaks.
+     */
+    private void closeSocketSafely() {
+        if (this.socket != null && !this.socket.isClosed()) {
+            try {
+                this.socket.close();
+                logger.debug("Socket closed during error cleanup for {}:{}", host, port);
+            } catch (IOException e) {
+                logger.warn("Failed to close socket during error cleanup for {}:{}: {}",
+                    host, port, e.getMessage());
+                // Suppress exception - we're already handling an error
+            }
         }
     }
 }

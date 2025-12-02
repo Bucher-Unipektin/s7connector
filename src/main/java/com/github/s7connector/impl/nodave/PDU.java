@@ -166,7 +166,8 @@ public final class PDU {
 	 * valid header,parameters,data,dlen
 	 */
 	void addValue(final byte[] values) {
-		int valCount = (0x100 * this.mem[this.data + 2]) + this.mem[this.data + 3];
+		// Java bytes are signed - must mask with 0xFF to get unsigned value
+		int valCount = ((this.mem[this.data + 2] & 0xFF) * 0x100) + (this.mem[this.data + 3] & 0xFF);
 		if (this.mem[this.data + 1] == 4) { // bit data, length is in bits
 			valCount += 8 * values.length;
 		} else if (this.mem[this.data + 1] == 9) { // byte data, length is in

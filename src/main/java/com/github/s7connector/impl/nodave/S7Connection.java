@@ -34,33 +34,43 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public abstract class S7Connection {
     private static final Logger logger = LoggerFactory.getLogger(S7Connection.class);
-    int answLen; // length of last message
+
+    // Note: These fields are modified inside locks but may be read without locks
+    // Making them volatile ensures visibility across threads
+    volatile int answLen; // length of last message
     /**
      * position in result data, incremented when variables are extracted without
      * position
      */
-    int dataPointer;
-    PLCinterface iface; // pointer to used interface
-    public int maxPDUlength;
-    public byte[] msgIn;
-    public byte[] msgOut;
+    volatile int dataPointer;
 
-    public int PDUstartIn;
-    public int PDUstartOut;
+    final PLCinterface iface; // pointer to used interface (immutable after construction)
+
+    // Public fields accessed by multiple threads - volatile for visibility
+    public volatile int maxPDUlength;
+    public final byte[] msgIn; // Array is mutable but reference is final
+    public final byte[] msgOut; // Array is mutable but reference is final
+
+    public final int PDUstartIn;
+    public final int PDUstartOut;
 
     /**
      * absolute begin of result data
      */
-    int udata;
+    volatile int udata;
 
     private final ReentrantLock lock = new ReentrantLock();
 
     public S7Connection(final PLCinterface ifa) {
+        this(ifa, 0, 0);
+    }
+
+    public S7Connection(final PLCinterface ifa, final int pduStartIn, final int pduStartOut) {
         this.iface = ifa;
         this.msgIn = new byte[Nodave.MAX_RAW_LEN];
         this.msgOut = new byte[Nodave.MAX_RAW_LEN];
-        this.PDUstartIn = 0;
-        this.PDUstartOut = 0;
+        this.PDUstartIn = pduStartIn;
+        this.PDUstartOut = pduStartOut;
     }
 
     abstract public int exchange(PDU p1) throws IOException;
@@ -168,8 +178,13 @@ public abstract class S7Connection {
             logger.debug("Writing {} bytes to area {} DB {} at offset {}", len, area, DBnum, start);
         }
 
-        this.lock.lock();
         int errorState;
+        try {
+            this.lock.lockInterruptibly();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while acquiring lock for write operation", e);
+        }
 
         try {
             final PDU p1 = new PDU(this.msgOut, this.PDUstartOut);

@@ -20,24 +20,32 @@ import java.io.IOException;
 
 public interface S7Connector extends Closeable {
 	/**
-	 * Reads an area
-	 * 
-	 * @param area
-	 * @param areaNumber
-	 * @param bytes
-	 * @param offset
-	 * @return
+	 * Reads data from a specified memory area of the PLC.
+	 *
+	 * @param area the memory area to read from (e.g., DB, Inputs, Outputs, Flags)
+	 * @param areaNumber the area number (e.g., DB number for data blocks)
+	 * @param bytes the number of bytes to read (must be positive)
+	 * @param offset the byte offset within the area (must be non-negative)
+	 * @return byte array containing the read data
+	 * @throws IOException if an I/O error occurs during communication with the PLC
+	 * @throws InterruptedException if the thread is interrupted while waiting for the lock or during I/O
+	 * @throws IllegalArgumentException if parameters are invalid (negative values, null area)
+	 * @throws IllegalStateException if the connection is not initialized
 	 */
-	public byte[] read(DaveArea area, int areaNumber, int bytes, int offset) throws IOException, InterruptedException;
+	byte[] read(DaveArea area, int areaNumber, int bytes, int offset) throws IOException, InterruptedException;
 
 	/**
-	 * Writes an area
-	 * 
-	 * @param area
-	 * @param areaNumber
-	 * @param offset
-	 * @param buffer
+	 * Writes data to a specified memory area of the PLC.
+	 *
+	 * @param area the memory area to write to (e.g., DB, Inputs, Outputs, Flags)
+	 * @param areaNumber the area number (e.g., DB number for data blocks)
+	 * @param offset the byte offset within the area (must be non-negative)
+	 * @param buffer the data to write (must not be null or empty)
+	 * @throws IOException if an I/O error occurs during communication with the PLC
+	 * @throws InterruptedException if the thread is interrupted while waiting for the lock or during I/O
+	 * @throws IllegalArgumentException if parameters are invalid (negative offset, null/empty buffer, null area)
+	 * @throws IllegalStateException if the connection is not initialized
 	 */
-	public void write(DaveArea area, int areaNumber, int offset, byte[] buffer) throws IOException;
+	void write(DaveArea area, int areaNumber, int offset, byte[] buffer) throws IOException, InterruptedException;
 
 }

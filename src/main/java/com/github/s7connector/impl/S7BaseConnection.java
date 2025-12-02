@@ -42,22 +42,30 @@ public abstract class S7BaseConnection implements S7Connector {
 
     /**
      * The Constant PROPERTY_AREA.
+     * @deprecated Unused, kept for backwards compatibility. Will be removed in future versions.
      */
+    @Deprecated
     public static final String PROPERTY_AREA = "area";
 
     /**
      * The Constant PROPERTY_AREANUMBER.
+     * @deprecated Unused, kept for backwards compatibility. Will be removed in future versions.
      */
+    @Deprecated
     public static final String PROPERTY_AREANUMBER = "areanumber";
 
     /**
      * The Constant PROPERTY_BYTES.
+     * @deprecated Unused, kept for backwards compatibility. Will be removed in future versions.
      */
+    @Deprecated
     public static final String PROPERTY_BYTES = "bytes";
 
     /**
      * The Constant PROPERTY_OFFSET.
+     * @deprecated Unused, kept for backwards compatibility. Will be removed in future versions.
      */
+    @Deprecated
     public static final String PROPERTY_OFFSET = "offset";
 
     /**
@@ -95,6 +103,11 @@ public abstract class S7BaseConnection implements S7Connector {
     private final ReentrantLock lock = new ReentrantLock();
 
     /**
+     * Flag to track if connection is closed (volatile for thread visibility)
+     */
+    private volatile boolean closed = false;
+
+    /**
      * Initialize the connection
      *
      * @param dc the connection instance
@@ -108,12 +121,34 @@ public abstract class S7BaseConnection implements S7Connector {
      */
     @Override
     public byte[] read(final DaveArea area, final int areaNumber, final int bytes, final int offset) throws IOException, InterruptedException {
+        // Input validation
+        if (area == null) {
+            throw new IllegalArgumentException("Area must not be null");
+        }
+        if (bytes <= 0) {
+            throw new IllegalArgumentException("Bytes must be positive, but was: " + bytes);
+        }
+        if (offset < 0) {
+            throw new IllegalArgumentException("Offset must be non-negative, but was: " + offset);
+        }
+        // Check for potential integer overflow
+        if (offset > Integer.MAX_VALUE - bytes) {
+            throw new IllegalArgumentException(String.format(
+                "Offset + bytes would cause integer overflow: offset=%d, bytes=%d", offset, bytes));
+        }
+        if (this.closed) {
+            throw new IllegalStateException("Connection is closed. Cannot perform read operation.");
+        }
+        if (this.dc == null) {
+            throw new IllegalStateException("Connection not initialized. Call init() first or ensure connection is properly established.");
+        }
+
         if (logger.isDebugEnabled()) {
             logger.debug("Read request: area={}, areaNumber={}, bytes={}, offset={}", area, areaNumber, bytes, offset);
         }
 
-        // Always acquire lock for the entire operation to ensure atomicity
-        this.lock.lock();
+        // Use lockInterruptibly to allow thread interruption and prevent deadlocks
+        this.lock.lockInterruptibly();
         try {
             byte[] result = readInternal(area, areaNumber, bytes, offset);
 
@@ -168,13 +203,39 @@ public abstract class S7BaseConnection implements S7Connector {
      * {@inheritDoc}
      */
     @Override
-    public void write(final DaveArea area, final int areaNumber, final int offset, final byte[] buffer) throws IOException {
+    public void write(final DaveArea area, final int areaNumber, final int offset, final byte[] buffer) throws IOException, InterruptedException {
+        // Input validation
+        if (area == null) {
+            throw new IllegalArgumentException("Area must not be null");
+        }
+        if (buffer == null) {
+            throw new IllegalArgumentException("Buffer must not be null");
+        }
+        if (buffer.length == 0) {
+            throw new IllegalArgumentException("Buffer must not be empty");
+        }
+        if (offset < 0) {
+            throw new IllegalArgumentException("Offset must be non-negative, but was: " + offset);
+        }
+        // Check for potential integer overflow
+        if (offset > Integer.MAX_VALUE - buffer.length) {
+            throw new IllegalArgumentException(String.format(
+                "Offset + buffer.length would cause integer overflow: offset=%d, buffer.length=%d",
+                offset, buffer.length));
+        }
+        if (this.closed) {
+            throw new IllegalStateException("Connection is closed. Cannot perform write operation.");
+        }
+        if (this.dc == null) {
+            throw new IllegalStateException("Connection not initialized. Call init() first or ensure connection is properly established.");
+        }
+
         if (logger.isDebugEnabled()) {
             logger.debug("Write request: area={}, areaNumber={}, offset={}, bytes={}", area, areaNumber, offset, buffer.length);
         }
 
-        // Always acquire lock for the entire operation to ensure atomicity
-        this.lock.lock();
+        // Use lockInterruptibly to allow thread interruption and prevent deadlocks
+        this.lock.lockInterruptibly();
         try {
             writeInternal(area, areaNumber, offset, buffer);
 
@@ -218,5 +279,24 @@ public abstract class S7BaseConnection implements S7Connector {
             // Check return-value
             checkResult(ret);
         }
+    }
+
+    /**
+     * Marks this connection as closed. Should be called by subclasses in their close() implementation.
+     * This prevents any further read/write operations on the connection.
+     * Thread-safe due to volatile flag.
+     */
+    protected void markAsClosed() {
+        this.closed = true;
+        logger.debug("Connection marked as closed");
+    }
+
+    /**
+     * Checks if the connection is closed.
+     *
+     * @return true if connection is closed, false otherwise
+     */
+    protected boolean isClosed() {
+        return this.closed;
     }
 }

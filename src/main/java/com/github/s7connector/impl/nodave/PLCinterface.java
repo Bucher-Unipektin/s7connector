@@ -43,6 +43,17 @@ public final class PLCinterface {
 
     public void init(final OutputStream oStream, final InputStream iStream, final String name, final int localMPI,
                      final int protocol) {
+        // Validate critical parameters
+        if (oStream == null) {
+            throw new IllegalArgumentException("OutputStream must not be null");
+        }
+        if (iStream == null) {
+            throw new IllegalArgumentException("InputStream must not be null");
+        }
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("Name must not be null or empty");
+        }
+
         this.out = oStream;
         this.in = iStream;
         this.name = name;
@@ -50,57 +61,52 @@ public final class PLCinterface {
         this.protocol = protocol;
     }
 
-	public int read(final byte[] b, int start, int len) {
+	public int read(final byte[] b, int start, int len) throws IOException {
 		if (logger.isTraceEnabled()) {
 			logger.trace("Reading {} bytes from PLC interface '{}'", len, name);
 		}
 
 		int res;
-		try {
-			int retry = 0;
-			while ((this.in.available() <= 0) && (retry < 500)) {
-				try {
-					if (retry > 0) {
-						Thread.sleep(1);
-					}
-					retry++;
-				} catch (final InterruptedException e) {
-					logger.warn("Thread interrupted while waiting for data from PLC interface '{}'. Thread will terminate.", name, e);
-					// Restore interrupted status so calling code can handle it
-					Thread.currentThread().interrupt();
-					// Return early to allow thread to terminate gracefully
-					return 0;
+		int retry = 0;
+		while ((this.in.available() <= 0) && (retry < 500)) {
+			try {
+				if (retry > 0) {
+					Thread.sleep(1);
 				}
+				retry++;
+			} catch (final InterruptedException e) {
+				logger.warn("Thread interrupted while waiting for data from PLC interface '{}'. Thread will terminate.", name, e);
+				// Restore interrupted status so calling code can handle it
+				Thread.currentThread().interrupt();
+				// Return early to allow thread to terminate gracefully
+				return 0;
 			}
-
-			if (this.in.available() <= 0 && retry >= 500) {
-				logger.debug("Timeout waiting for data from PLC interface '{}' after {} retries", name, retry);
-			}
-
-			res = 0;
-			while ((this.in.available() > 0) && (len > 0)) {
-				int bytesRead = this.in.read(b, start, len);
-				if (bytesRead > 0) {
-					res += bytesRead;
-					start += bytesRead;
-					len -= bytesRead;
-				} else if (bytesRead < 0) {
-					logger.warn("End of stream reached on PLC interface '{}'", name);
-					break;
-				} else {
-					break;
-				}
-			}
-
-			if (logger.isTraceEnabled()) {
-				logger.trace("Successfully read {} bytes from PLC interface '{}'", res, name);
-			}
-
-			return res;
-		} catch (final IOException e) {
-			logger.error("IOException while reading from PLC interface '{}': {}", name, e.getMessage(), e);
-			return 0;
 		}
+
+		if (this.in.available() <= 0 && retry >= 500) {
+			logger.debug("Timeout waiting for data from PLC interface '{}' after {} retries", name, retry);
+		}
+
+		res = 0;
+		while ((this.in.available() > 0) && (len > 0)) {
+			int bytesRead = this.in.read(b, start, len);
+			if (bytesRead > 0) {
+				res += bytesRead;
+				start += bytesRead;
+				len -= bytesRead;
+			} else if (bytesRead < 0) {
+				logger.warn("End of stream reached on PLC interface '{}'", name);
+				break;
+			} else {
+				break;
+			}
+		}
+
+		if (logger.isTraceEnabled()) {
+			logger.trace("Successfully read {} bytes from PLC interface '{}'", res, name);
+		}
+
+		return res;
 	}
 
 	public void write(final byte[] b, final int start, final int len) throws IOException {
