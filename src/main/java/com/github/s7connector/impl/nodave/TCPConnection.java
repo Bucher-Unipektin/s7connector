@@ -19,12 +19,17 @@
 */
 package com.github.s7connector.impl.nodave;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 /**
  * The Class TCPConnection.
  */
 public final class TCPConnection extends S7Connection {
+
+    private static final Logger logger = LoggerFactory.getLogger(TCPConnection.class);
 
     /**
      * The connection type.
@@ -65,6 +70,8 @@ public final class TCPConnection extends S7Connection {
      * @return the int
      */
     public int connectPLC() throws IOException {
+        logger.debug("Connecting to PLC: rack={}, slot={}", rack, slot);
+
         int packetLength;
         if (iface.protocol == Nodave.PROTOCOL_ISOTCP243) {
         	final byte[] b243 = {
@@ -91,7 +98,15 @@ public final class TCPConnection extends S7Connection {
          * PDU p = new PDU(msgOut, 7); p.initHeader(1); p.addParam(b61);
          * exchange(p); return (0);
          */
-        return this.negPDUlengthRequest();
+        int result = this.negPDUlengthRequest();
+
+        if (result == 0) {
+            logger.info("Successfully connected to PLC: rack={}, slot={}", rack, slot);
+        } else {
+            logger.warn("PLC connection completed with non-zero result: {}", result);
+        }
+
+        return result;
     }
 
     /**
@@ -99,11 +114,20 @@ public final class TCPConnection extends S7Connection {
      */
     @Override
     public int exchange(final PDU p1) throws IOException {
+        if (logger.isTraceEnabled()) {
+            logger.trace("Exchanging PDU: hlen={}, plen={}, dlen={}", p1.hlen, p1.plen, p1.dlen);
+        }
+
         this.msgOut[4] = (byte) 0x02;
         this.msgOut[5] = (byte) 0xf0;
         this.msgOut[6] = (byte) 0x80;
         this.sendISOPacket(3 + p1.hlen + p1.plen + p1.dlen);
         this.readISOPacket();
+
+        if (logger.isTraceEnabled()) {
+            logger.trace("PDU exchange completed successfully");
+        }
+
         return 0;
     }
 

@@ -19,11 +19,15 @@
 */
 package com.github.s7connector.impl.nodave;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 public final class PLCinterface {
+	private static final Logger logger = LoggerFactory.getLogger(PLCinterface.class);
     InputStream in;
     int localMPI; // the adapter's MPI address
     String name;
@@ -46,41 +50,73 @@ public final class PLCinterface {
         this.protocol = protocol;
     }
 
-    public int read(final byte[] b, int start, int len) {
-        int res;
-        try {
-            int retry = 0;
-            while ((this.in.available() <= 0) && (retry < 500)) {
-                try {
-                    if (retry > 0) {
-                        Thread.sleep(1);
-                    }
-                    retry++;
-                } catch (final InterruptedException e) {
-                    // Restore interrupted status so calling code can handle it
-                    Thread.currentThread().interrupt();
-                    // Return early to allow thread to terminate gracefully
-                    return 0;
-                }
-            }
-            res = 0;
-            while ((this.in.available() > 0) && (len > 0)) {
-                int bytesRead = this.in.read(b, start, len);
-                if (bytesRead > 0) {
-                    res += bytesRead;
-                    start += bytesRead;
-                    len -= bytesRead;
-                } else {
-                    break;
-                }
-            }
-            return res;
-        } catch (final IOException e) {
-            return 0;
-        }
-    }
+	public int read(final byte[] b, int start, int len) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("Reading {} bytes from PLC interface '{}'", len, name);
+		}
 
-    public void write(final byte[] b, final int start, final int len) throws IOException {
-        this.out.write(b, start, len);
-    }
+		int res;
+		try {
+			int retry = 0;
+			while ((this.in.available() <= 0) && (retry < 500)) {
+				try {
+					if (retry > 0) {
+						Thread.sleep(1);
+					}
+					retry++;
+				} catch (final InterruptedException e) {
+					logger.warn("Thread interrupted while waiting for data from PLC interface '{}'. Thread will terminate.", name, e);
+					// Restore interrupted status so calling code can handle it
+					Thread.currentThread().interrupt();
+					// Return early to allow thread to terminate gracefully
+					return 0;
+				}
+			}
+
+			if (this.in.available() <= 0 && retry >= 500) {
+				logger.debug("Timeout waiting for data from PLC interface '{}' after {} retries", name, retry);
+			}
+
+			res = 0;
+			while ((this.in.available() > 0) && (len > 0)) {
+				int bytesRead = this.in.read(b, start, len);
+				if (bytesRead > 0) {
+					res += bytesRead;
+					start += bytesRead;
+					len -= bytesRead;
+				} else if (bytesRead < 0) {
+					logger.warn("End of stream reached on PLC interface '{}'", name);
+					break;
+				} else {
+					break;
+				}
+			}
+
+			if (logger.isTraceEnabled()) {
+				logger.trace("Successfully read {} bytes from PLC interface '{}'", res, name);
+			}
+
+			return res;
+		} catch (final IOException e) {
+			logger.error("IOException while reading from PLC interface '{}': {}", name, e.getMessage(), e);
+			return 0;
+		}
+	}
+
+	public void write(final byte[] b, final int start, final int len) throws IOException {
+		if (logger.isTraceEnabled()) {
+			logger.trace("Writing {} bytes to PLC interface '{}'", len, name);
+		}
+
+		try {
+			this.out.write(b, start, len);
+
+			if (logger.isTraceEnabled()) {
+				logger.trace("Successfully wrote {} bytes to PLC interface '{}'", len, name);
+			}
+		} catch (final IOException e) {
+			logger.error("IOException while writing to PLC interface '{}': {}", name, e.getMessage(), e);
+			throw e;
+		}
+	}
 }

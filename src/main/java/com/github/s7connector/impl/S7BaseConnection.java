@@ -19,6 +19,8 @@ import com.github.s7connector.api.DaveArea;
 import com.github.s7connector.api.S7Connector;
 import com.github.s7connector.impl.nodave.Nodave;
 import com.github.s7connector.impl.nodave.S7Connection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.locks.ReentrantLock;
@@ -30,6 +32,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Thomas Rudin
  */
 public abstract class S7BaseConnection implements S7Connector {
+
+    private static final Logger logger = LoggerFactory.getLogger(S7BaseConnection.class);
 
     /**
      * The Constant MAX_SIZE.
@@ -64,6 +68,7 @@ public abstract class S7BaseConnection implements S7Connector {
     public static void checkResult(final int libnodaveResult) {
         if (libnodaveResult != Nodave.RESULT_OK) {
             final String msg = Nodave.strerror(libnodaveResult);
+            logger.error("PLC operation failed with result code {}: {}", libnodaveResult, msg);
             throw new IllegalArgumentException("Result: " + msg);
         }
     }
@@ -103,10 +108,25 @@ public abstract class S7BaseConnection implements S7Connector {
      */
     @Override
     public byte[] read(final DaveArea area, final int areaNumber, final int bytes, final int offset) throws IOException, InterruptedException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Read request: area={}, areaNumber={}, bytes={}, offset={}", area, areaNumber, bytes, offset);
+        }
+
         // Always acquire lock for the entire operation to ensure atomicity
         this.lock.lock();
         try {
-            return readInternal(area, areaNumber, bytes, offset);
+            byte[] result = readInternal(area, areaNumber, bytes, offset);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Read completed: area={}, areaNumber={}, bytes={}, offset={}, actualBytes={}",
+                    area, areaNumber, bytes, offset, result.length);
+            }
+
+            return result;
+        } catch (IOException e) {
+            logger.error("IOException during read: area={}, areaNumber={}, bytes={}, offset={}, error={}",
+                area, areaNumber, bytes, offset, e.getMessage(), e);
+            throw e;
         } finally {
             this.lock.unlock();
         }
@@ -120,6 +140,10 @@ public abstract class S7BaseConnection implements S7Connector {
         if (bytes > MAX_SIZE) {
             // Handle large reads by splitting into chunks
             // Note: Lock is already held by public read() method
+            if (logger.isTraceEnabled()) {
+                logger.trace("Splitting read into chunks: bytes={}, MAX_SIZE={}", bytes, MAX_SIZE);
+            }
+
             final byte[] ret = new byte[bytes];
 
             final byte[] currentBuffer = readInternal(area, areaNumber, MAX_SIZE, offset);
@@ -145,10 +169,23 @@ public abstract class S7BaseConnection implements S7Connector {
      */
     @Override
     public void write(final DaveArea area, final int areaNumber, final int offset, final byte[] buffer) throws IOException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Write request: area={}, areaNumber={}, offset={}, bytes={}", area, areaNumber, offset, buffer.length);
+        }
+
         // Always acquire lock for the entire operation to ensure atomicity
         this.lock.lock();
         try {
             writeInternal(area, areaNumber, offset, buffer);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Write completed: area={}, areaNumber={}, offset={}, bytes={}",
+                    area, areaNumber, offset, buffer.length);
+            }
+        } catch (IOException e) {
+            logger.error("IOException during write: area={}, areaNumber={}, offset={}, bytes={}, error={}",
+                area, areaNumber, offset, buffer.length, e.getMessage(), e);
+            throw e;
         } finally {
             this.lock.unlock();
         }
@@ -162,6 +199,10 @@ public abstract class S7BaseConnection implements S7Connector {
         if (buffer.length > MAX_SIZE) {
             // Handle large writes by splitting into chunks
             // Note: Lock is already held by public write() method
+            if (logger.isTraceEnabled()) {
+                logger.trace("Splitting write into chunks: bytes={}, MAX_SIZE={}", buffer.length, MAX_SIZE);
+            }
+
             final byte[] subBuffer = new byte[MAX_SIZE];
             final byte[] nextBuffer = new byte[buffer.length - subBuffer.length];
 

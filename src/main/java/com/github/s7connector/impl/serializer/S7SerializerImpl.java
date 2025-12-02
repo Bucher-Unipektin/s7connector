@@ -25,6 +25,7 @@ import com.github.s7connector.impl.serializer.parser.BeanParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 
 /**
@@ -151,14 +152,39 @@ public final class S7SerializerImpl implements S7Serializer {
     @Override
     public <T> T dispense(final Class<T> beanClass, final int dbNum, final int byteOffset)
             throws S7Exception {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Dispensing bean of type {} from DB {} at offset {}", beanClass.getName(), dbNum, byteOffset);
+        }
+
         try {
             final BeanParseResult result = BeanParser.parse(beanClass);
             // No lock needed here - S7BaseConnection.read() handles thread-safety
             final byte[] buffer = this.connector.read(DaveArea.DB, dbNum, result.blockSize, byteOffset);
-            return extractBytes(beanClass, buffer, 0);
+            T bean = extractBytes(beanClass, buffer, 0);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Successfully dispensed bean of type {} from DB {}", beanClass.getName(), dbNum);
+            }
+
+            return bean;
+
+        } catch (final IOException e) {
+            String msg = String.format("IOException while dispensing %s from DB %d at offset %d",
+                    beanClass.getName(), dbNum, byteOffset);
+            logger.error(msg, e);
+            throw new S7Exception(msg, e);
+
+        } catch (final InterruptedException e) {
+            String msg = String.format("Interrupted while dispensing %s from DB %d at offset %d",
+                    beanClass.getName(), dbNum, byteOffset);
+            logger.warn(msg, e);
+            throw new S7Exception(msg, e);
 
         } catch (final Exception e) {
-            throw new S7Exception("dispense", e);
+            String msg = String.format("Error dispensing %s from DB %d at offset %d: %s",
+                    beanClass.getName(), dbNum, byteOffset, e.getMessage());
+            logger.error(msg, e);
+            throw new S7Exception(msg, e);
         }
     }
 
@@ -168,14 +194,37 @@ public final class S7SerializerImpl implements S7Serializer {
     @Override
     public <T> T dispense(final Class<T> beanClass, final int dbNum, final int byteOffset,
                           final int blockSize) throws S7Exception {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Dispensing bean of type {} from DB {} at offset {} with blockSize {}",
+                    beanClass.getName(), dbNum, byteOffset, blockSize);
+        }
+
         try {
             // No lock needed here - S7BaseConnection.read() handles thread-safety
             final byte[] buffer = this.connector.read(DaveArea.DB, dbNum, blockSize, byteOffset);
-            return extractBytes(beanClass, buffer, 0);
+            T bean = extractBytes(beanClass, buffer, 0);
 
+            if (logger.isDebugEnabled()) {
+                logger.debug("Successfully dispensed bean of type {} from DB {}", beanClass.getName(), dbNum);
+            }
+
+            return bean;
+
+        } catch (final IOException e) {
+            String msg = String.format("IOException while dispensing %s from DB %d at offset %d (blockSize=%d)",
+                    beanClass.getName(), dbNum, byteOffset, blockSize);
+            logger.error(msg, e);
+            throw new S7Exception(msg, e);
+        } catch (final InterruptedException e) {
+            String msg = String.format("Interrupted while dispensing %s from DB %d at offset %d (blockSize=%d)",
+                    beanClass.getName(), dbNum, byteOffset, blockSize);
+            logger.warn(msg, e);
+            throw new S7Exception(msg, e);
         } catch (final Exception e) {
-            throw new S7Exception(
-                    "dispense dbnum(" + dbNum + ") byteoffset(" + byteOffset + ") blocksize(" + blockSize + ")", e);
+            String msg = String.format("Error dispensing %s from DB %d at offset %d (blockSize=%d): %s",
+                    beanClass.getName(), dbNum, byteOffset, blockSize, e.getMessage());
+            logger.error(msg, e);
+            throw new S7Exception(msg, e);
         }
     }
 
@@ -184,18 +233,34 @@ public final class S7SerializerImpl implements S7Serializer {
      */
     @Override
     public void store(final Object bean, final int dbNum, final int byteOffset) throws S7Exception {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Storing bean of type {} to DB {} at offset {}", bean.getClass().getName(), dbNum, byteOffset);
+        }
+
         try {
             final BeanParseResult result = BeanParser.parse(bean);
 
             final byte[] buffer = new byte[result.blockSize];
-            logger.trace("store-buffer-size: " + buffer.length);
+            logger.trace("Store buffer size: {}", buffer.length);
 
             insertBytes(bean, buffer, 0);
 
             this.connector.write(DaveArea.DB, dbNum, byteOffset, buffer);
 
+            if (logger.isDebugEnabled()) {
+                logger.debug("Successfully stored bean of type {} to DB {}", bean.getClass().getName(), dbNum);
+            }
+
+        } catch (final IOException e) {
+            String msg = String.format("IOException while storing %s to DB %d at offset %d",
+                    bean.getClass().getName(), dbNum, byteOffset);
+            logger.error(msg, e);
+            throw new S7Exception(msg, e);
         } catch (final Exception e) {
-            throw new S7Exception("store", e);
+            String msg = String.format("Error storing %s to DB %d at offset %d: %s",
+                    bean.getClass().getName(), dbNum, byteOffset, e.getMessage());
+            logger.error(msg, e);
+            throw new S7Exception(msg, e);
         }
     }
 }
